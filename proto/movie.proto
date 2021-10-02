@@ -1,0 +1,61 @@
+syntax = "proto3";
+package pb;
+
+option go_package = ".;pb";
+
+service MovieService {
+    rpc SearchMovie(FindAllRequest) returns(FindAllResponse) {};
+    rpc SearchMovieByID(FindByIDRequest) returns(Movie) {};
+}
+
+message FindAllRequest {
+    int32 pagination = 1;
+    string searchword = 2;
+}
+
+message FindAllResponse {
+    repeated MovieList Results = 1;
+    int64 TotalResult = 2;
+}
+
+message MovieList {
+    string Title = 1;
+    string Year = 2;
+    string imdbID = 3;
+    string Type = 4;
+    string Poster = 5;
+}
+
+message FindByIDRequest {
+    string ID = 1;
+}
+
+message Movie {
+    string Title = 1;
+    string Year = 2;
+    string Rated = 3;
+    string Released = 4;
+    string Runtime = 5;
+    string Genre = 6;
+    string Director = 7;
+    string Writer = 8;
+    string Actors = 9;
+    string Plot = 10;
+    string Language = 11;
+    string Country = 12;
+    string Awards = 13;
+    string Poster = 14;
+    repeated Rating Ratings = 15;
+    string Metascore = 16;
+    string imdbRating = 17;
+    string imdbVotes = 18;
+    string imdbID = 19;
+    string Type = 20;
+    string totalSeasons = 21;
+    string Response = 22;
+}
+
+message Rating {
+    string Source = 1;
+    string Value = 2;
+}
