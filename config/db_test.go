@@ -3,6 +3,8 @@ package config
 import (
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func setDBEnv() {
@@ -25,8 +27,5 @@ func TestGetConn_Ping(t *testing.T) {
 
 	err := conn.Ping()
 
-	if err != nil {
-		t.Errorf("Failed to ping database and get error %v", err)
-	}
-
+	assert.Nil(t, err, "Failed Ping database")
 }
