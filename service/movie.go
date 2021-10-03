@@ -14,24 +14,21 @@ import (
 	"github.com/naufaldymahas/movie-grpc-api/config"
 	"github.com/naufaldymahas/movie-grpc-api/entity"
 	"github.com/naufaldymahas/movie-grpc-api/pb"
-	"github.com/naufaldymahas/movie-grpc-api/repository"
 )
 
 var movieService pb.MovieServiceServer
-var doOnceMovieLogService sync.Once
+var doOnceMovieService sync.Once
 
-func InitMovieLogService() pb.MovieServiceServer {
-	doOnceMovieLogService.Do(func() {
-		movieService = &MovieService{
-			movieLogrepository: repository.InitMovieLogRepository(config.GetConn()),
-		}
+func InitMovieService() pb.MovieServiceServer {
+	doOnceMovieService.Do(func() {
+		movieService = &MovieService{}
+		InitMovieLogService(config.GetConn())
 	})
 
 	return movieService
 }
 
 type MovieService struct {
-	movieLogrepository repository.MovieLogInterface
 }
 
 func (svc *MovieService) SearchMovie(ctx context.Context, req *pb.FindAllRequest) (*pb.FindAllResponse, error) {
@@ -41,6 +38,8 @@ func (svc *MovieService) SearchMovie(ctx context.Context, req *pb.FindAllRequest
 	}
 	resp, err := svc.callRest(params)
 
+	rawParam := movieLogService.ToJSONString(req)
+	go movieLogService.CreateMovieLog("Search Movie", rawParam)
 	if resp.StatusCode() == 200 && err == nil {
 		data := new(entity.MovieResponse)
 		err = json.Unmarshal([]byte(resp.String()), data)
@@ -59,6 +58,7 @@ func (svc *MovieService) SearchMovie(ctx context.Context, req *pb.FindAllRequest
 
 			totalResult, _ := strconv.ParseInt(data.TotalResults, 10, 64)
 			result.TotalResult = totalResult
+
 			return result, nil
 		}
 	}
@@ -67,22 +67,25 @@ func (svc *MovieService) SearchMovie(ctx context.Context, req *pb.FindAllRequest
 
 func (svc *MovieService) SearchMovieByID(ctx context.Context, req *pb.FindByIDRequest) (*pb.Movie, error) {
 	params := map[string]string{
-		"i": req.GetID(),
+		"i": req.GetId(),
 	}
 
 	resp, err := svc.callRest(params)
 
+	rawParam := movieLogService.ToJSONString(req)
+	go movieLogService.CreateMovieLog("Search Movie By ID", rawParam)
 	if resp.StatusCode() == 200 && err == nil {
 		data := new(entity.Movie)
 		err = json.Unmarshal([]byte(resp.String()), data)
 
 		if strings.EqualFold(data.Response, "false") {
-			return nil, errors.New("failed to get movies")
+			return nil, errors.New("failed to get detail movie")
 		}
 
 		if err == nil {
 			result := new(pb.Movie)
 			copier.Copy(result, data)
+
 			return result, nil
 		}
 	}

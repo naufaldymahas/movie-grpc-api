@@ -1,7 +1,7 @@
 package main
 
 import (
-	"log"
+	"context"
 
 	"github.com/naufaldymahas/movie-grpc-api/config"
 	"github.com/naufaldymahas/movie-grpc-api/server"
@@ -10,10 +10,14 @@ import (
 func main() {
 	config.InitConfig()
 
-	grpcPort := config.GetStringEnv("GRPC_PORT", "8080")
+	ctx := context.Background()
 
-	grpcServer := server.GRPCServer(grpcPort)
-	if grpcServer != nil {
-		log.Fatal("GRPC Server failed to start")
-	}
+	grpcPort := config.GetStringEnv("GRPC_PORT", "8080")
+	restPort := config.GetStringEnv("REST_PORT", "8081")
+
+	go func() {
+		server.RESTServer(ctx, grpcPort, restPort)
+	}()
+
+	server.GRPCServer(ctx, grpcPort)
 }
